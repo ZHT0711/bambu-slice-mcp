@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+
+# slicer output / local scratch
+*.gcode.3mf
+*.gcode
+bambu_sweep/
+.DS_Store
+Thumbs.db
+
+# slicer CLI writes this into the working directory
+result.json

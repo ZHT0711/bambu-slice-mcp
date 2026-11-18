@@ -1,0 +1,44 @@
+{
+  "name": "bambu-slice-mcp",
+  "version": "0.1.0",
+  "description": "Headless slicing and print-profile optimization for Bambu Studio / OrcaSlicer via MCP. Flattens preset inheritance, drives the slicer CLI, and sweeps parameters with real measured print time and filament usage.",
+  "type": "module",
+  "bin": {
+    "bambu-slice-mcp": "src/server.js"
+  },
+  "main": "src/server.js",
+  "files": [
+    "src",
+    "SKILL.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node test/smoke.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "bambu-lab",
+    "bambu-studio",
+    "orcaslicer",
+    "3d-printing",
+    "slicer",
+    "gcode"
+  ],
+  "author": "ZHT0711",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZHT0711/bambu-slice-mcp.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "adm-zip": "^0.5.16",
+    "zod": "^3.23.8"
+  }
+}

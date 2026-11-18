@@ -153,6 +153,20 @@ exists to replace with a measurement.
   several minutes. Give the client a generous tool timeout.
 - **`--load-filaments` is separate from `--load-settings`**; the process preset does not carry
   filament data.
+- **Cold first layer (auto-patched)**: some shipped machine presets (BBL X1C in Studio 02.09)
+  end their start gcode with `M109 S205;` — a preheat-only wait — and then draw the purge line,
+  raising the nozzle target only at layer 2. The whole first layer prints ~40 °C low (PETG at 205,
+  PLA at 180): under-extrusion and adhesion failures that never happen with GUI-sliced files,
+  because the GUI's printer presets carry a full temperature choreography. The server detects this
+  pattern in the flattened machine preset and rewrites the wait to
+  `M109 S{nozzle_temperature_initial_layer[initial_no_support_extruder]}` before calling the CLI.
+- **Bed type is a project setting, not a filament setting**: exported projects default to
+  `Cool Plate`. PETG has no Cool Plate temperature, so slicing fails with
+  "Filaments are not compatible with the plate type", and PLA prints with the bed at 35 °C.
+  Pass `curr_bed_type` (e.g. `"Textured PEI Plate"`) as an override.
+- **Paths must not contain spaces**: the CLI splits its arguments on spaces, so
+  `C:\my models\part.stl` fails with "The input files to the slicer are not found". Chinese
+  characters are fine; spaces are not.
 
 ## Development
 

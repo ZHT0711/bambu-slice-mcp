@@ -1,6 +1,6 @@
 {
   "name": "bambu-slice-mcp",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Headless slicing and print-profile optimization for Bambu Studio / OrcaSlicer via MCP. Flattens preset inheritance, drives the slicer CLI, and sweeps parameters with real measured print time and filament usage.",
   "type": "module",
   "bin": {

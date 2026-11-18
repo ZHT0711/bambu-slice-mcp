@@ -52,6 +52,34 @@ export function runCli(bin, args, { timeoutMs = DEFAULT_TIMEOUT_MS, cwd } = {}) 
   });
 }
 
+/**
+ * Some shipped machine presets (e.g. BBL X1C resources in Studio 02.09)
+ * hardcode a preheat-only wait right before the purge line:
+ *
+ *     M109 S205;
+ *     G1 X10.1 Y200.0 Z0.28 F1500.0 E15 ;Draw the first line
+ *
+ * Nothing raises the target afterwards until layer 2, so the ENTIRE first
+ * layer prints at preheat temp (initial-layer temp minus ~40C): PETG starts
+ * around 205C instead of 245C, PLA around 180C — under-extrusion and bed
+ * adhesion failures. The GUI does not emit this (its printer presets carry a
+ * full choreography), which is why files sliced by the CLI alone can fail
+ * where GUI files print fine. Replace the hardcoded wait with one that waits
+ * for the real initial layer temperature. The CLI evaluates these template
+ * placeholders in machine_start_gcode, same as the GUI's own presets do.
+ */
+function patchMachineStartGcode(cfg) {
+  if (typeof cfg?.machine_start_gcode !== "string") return;
+  const sg = cfg.machine_start_gcode;
+  const preheatOnly = /M109 S\d+;\s*\nG1 X[\d.]+ Y[\d.]+[^\n]*E[\d.]+[^\n]*Draw the first line/;
+  if (!preheatOnly.test(sg)) return;
+  cfg.machine_start_gcode = sg.replace(
+    /M109 S\d+;/,
+    "M104 S{nozzle_temperature_initial_layer[initial_no_support_extruder]}\n" +
+      "M109 S{nozzle_temperature_initial_layer[initial_no_support_extruder]} ;wait for initial layer temp",
+  );
+}
+
 /** Write flattened presets to a temp dir and return their paths. */
 function materializePresets(slicer, { machine, process, filament }, tempDir) {
   const out = { machine: null, process: null, filament: null };
@@ -59,7 +87,12 @@ function materializePresets(slicer, { machine, process, filament }, tempDir) {
   for (const kind of ["machine", "process", "filament"]) {
     const spec = wanted[kind];
     if (!spec) continue;
-    const flat = flattenPreset(slicer, spec, kind);
+    let flat = flattenPreset(slicer, spec, kind);
+    if (kind === "machine") {
+      const cfg = { ...flat.config };
+      patchMachineStartGcode(cfg);
+      flat = { ...flat, config: cfg };
+    }
     const file = path.join(tempDir, `${kind}.json`);
     fs.writeFileSync(file, JSON.stringify(flat.config, null, 2), "utf-8");
     out[kind] = file;
